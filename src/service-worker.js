@@ -12,6 +12,7 @@ import { ExpirationPlugin } from 'workbox-expiration';
 import { precacheAndRoute, createHandlerBoundToURL } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
 import { StaleWhileRevalidate } from 'workbox-strategies';
+import {cacheNames as browser} from "workbox-core/src/cacheNames";
 
 clientsClaim();
 
@@ -69,4 +70,18 @@ self.addEventListener('message', (event) => {
   }
 });
 
-// Any other custom service worker logic can go here.
+self.addEventListener('install', (event) => {
+    event.waitUntil(
+        caches.open('my-cache').then((cache) => {
+            return cache.addAll(['/index.html', '/app.js', '/styles.css']);
+        })
+    );
+});
+
+self.addEventListener('fetch', (event) => {
+    event.respondWith(
+        caches.match(event.request).then((response) => {
+            return response || fetch(event.request);
+        })
+    );
+});
